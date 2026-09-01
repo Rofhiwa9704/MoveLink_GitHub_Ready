@@ -1,0 +1,20 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Layout from "../../components/Layout";
+import { useAuth } from "../../context/AuthContext";
+import { rideApi } from "../../services/api";
+
+const vehicles=[["BAKKIE","Bakkie"],["PANEL_VAN","Panel van"],["MINI_TRUCK","Mini truck"],["ONE_TON_TRUCK","1 ton truck"],["THREE_TON_TRUCK","3 ton truck"],["FIVE_TON_TRUCK","5 ton truck"],["EIGHT_TON_TRUCK","8 ton truck"],["HORSE_AND_TRAILER","Horse & trailer"]];
+
+export default function BookRide(){
+ const {user}=useAuth(); const nav=useNavigate(); const [busy,setBusy]=useState(false); const [error,setError]=useState("");
+ const [form,setForm]=useState({pickupLocation:"",destination:"",loadDescription:"",estimatedWeight:"",helpersRequired:0,requiredVehicleType:"BAKKIE",scheduledRide:false,scheduledDateTime:""});
+ const update=e=>setForm({...form,[e.target.name]:e.target.type==="checkbox"?e.target.checked:e.target.value});
+ const submit=async e=>{e.preventDefault();setBusy(true);setError("");try{await rideApi.request({customerId:Number(user.userId),pickupLocation:form.pickupLocation.trim(),destination:form.destination.trim(),pickupLatitude:0,pickupLongitude:0,loadDescription:form.loadDescription.trim(),estimatedWeight:Number(form.estimatedWeight),helpersRequired:Number(form.helpersRequired),requiredVehicleType:form.requiredVehicleType,scheduledRide:form.scheduledRide,scheduledDateTime:form.scheduledRide?form.scheduledDateTime:null});nav("/customer")}catch(err){setError(err.response?.data?.message||"We could not create your move. Please try again.")}finally{setBusy(false)}};
+ return <Layout><div className="page-head"><div><div className="eyebrow">NEW MOVE</div><h1>Book a move</h1><p className="muted">Give us the details and we'll match your request with a driver.</p></div></div>
+ <form onSubmit={submit} className="booking-grid"><section className="panel"><h2>Route</h2><div className="form-stack"><label>Pickup location<input name="pickupLocation" value={form.pickupLocation} onChange={update} placeholder="e.g. Sandton, Johannesburg" required /></label><label>Destination<input name="destination" value={form.destination} onChange={update} placeholder="e.g. Kempton Park" required /></label><div className="route-note">📍 You can enter an address, suburb or landmark.</div></div></section>
+ <section className="panel"><h2>What are you moving?</h2><div className="form-stack"><label>Description<textarea name="loadDescription" value={form.loadDescription} onChange={update} rows="4" placeholder="Furniture, boxes, appliances..." required /></label><div className="form-grid"><label>Estimated weight (kg)<input type="number" min="0" name="estimatedWeight" value={form.estimatedWeight} onChange={update} required /></label><label>Helpers needed<select name="helpersRequired" value={form.helpersRequired} onChange={update}><option value="0">No helpers</option><option value="1">1 helper</option><option value="2">2 helpers</option><option value="3">3 helpers</option><option value="4">4 helpers</option></select></label></div><label>Vehicle type<select name="requiredVehicleType" value={form.requiredVehicleType} onChange={update}>{vehicles.map(([v,l])=><option key={v} value={v}>{l}</option>)}</select></label></div></section>
+ <section className="panel"><h2>When?</h2><label className="check-row"><input type="checkbox" name="scheduledRide" checked={form.scheduledRide} onChange={update}/><span><strong>Schedule this move</strong><small>Choose a future date and time.</small></span></label>{form.scheduledRide&&<label className="mt">Date & time<input type="datetime-local" name="scheduledDateTime" value={form.scheduledDateTime} onChange={update} required /></label>}</section>
+ <div className="booking-submit"><div>{error&&<p className="form-error">{error}</p>}</div><div className="button-row"><button type="button" className="btn btn-ghost" onClick={()=>nav("/customer")}>Cancel</button><button className="btn btn-primary btn-lg" disabled={busy}>{busy?"Booking...":"Request a driver"}</button></div></div>
+ </form></Layout>;
+}

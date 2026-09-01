@@ -1,0 +1,36 @@
+package com.movelink.backend.controller;
+
+import com.movelink.backend.dto.ReviewRequest;
+import com.movelink.backend.entity.Review;
+import com.movelink.backend.service.ReviewService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/reviews")
+public class ReviewController {
+
+    private final ReviewService reviewService;
+
+    public ReviewController(ReviewService reviewService) {
+        this.reviewService = reviewService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Review> addReview(
+            @RequestBody ReviewRequest request) {
+
+        return ResponseEntity.ok(reviewService.addReview(request));
+    }
+
+    @GetMapping("/driver/{driverId}")
+    public ResponseEntity<List<Review>> getDriverReviews(
+            @PathVariable Long driverId) {
+
+        return ResponseEntity.ok(
+                reviewService.getDriverReviews(driverId)
+        );
+    }
+}

@@ -1,0 +1,23 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+
+# Backend
+backend/target/
+backend/build/
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+*.iml
+*.suo
+*.swp
