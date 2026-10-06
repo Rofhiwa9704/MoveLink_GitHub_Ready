@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: movelink-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-movelink_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-movelink_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    container_name: movelink-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-movelink_db}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-yourpassword}
+      APP_CORS_ORIGINS: ${APP_CORS_ORIGINS:-http://localhost}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      MOVELINK_ADMIN_EMAIL: ${MOVELINK_ADMIN_EMAIL:-}
+      MOVELINK_ADMIN_PASSWORD: ${MOVELINK_ADMIN_PASSWORD:-}
+      MOVELINK_JWT_SECRET: ${MOVELINK_JWT_SECRET:-movelink-development-secret-key-change-me-2026}
+      MOVELINK_JWT_EXPIRATION_MS: ${MOVELINK_JWT_EXPIRATION_MS:-86400000}
+    expose:
+      - "8080"
+
+  frontend:
+    build: ./frontend
+    container_name: movelink-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  postgres_data:
